@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Awareness Training Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .email-interface {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .phishing-indicator {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .danger-zone {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        }
+        
+        .safe-zone {
+            background: linear-gradient(45deg, #26de81, #20bf6b);
+        }
+        
+        .warning-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .email-preview {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .email-preview:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+        
+        .simulation-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 border-b border-gray-700 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-shield-alt text-blue-400 text-2xl"></i>
+                <h1 class="text-xl font-bold">PhishGuard Training Platform</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span id="userScore" class="bg-blue-600 px-3 py-1 rounded-full text-sm">Score: 0</span>
+                <button onclick="resetSimulation()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded transition">
+                    <i class="fas fa-redo mr-2"></i>Reset
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard -->
+    <div class="container mx-auto p-6">
+        <!-- Statistics Dashboard -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="simulation-card p-6 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Emails Analyzed</p>
+                        <p id="totalEmails" class="text-2xl font-bold text-blue-400">0</p>
+                    </div>
+                    <i class="fas fa-envelope text-blue-400 text-2xl"></i>
+                </div>
+            </div>
+            
+            <div class="simulation-card p-6 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Threats Detected</p>
+                        <p id="threatsDetected" class="text-2xl font-bold text-red-400">0</p>
+                    </div>
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                </div>
+            </div>
+            
+            <div class="simulation-card p-6 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Accuracy Rate</p>
+                        <p id="accuracyRate" class="text-2xl font-bold text-green-400">0%</p>
+                    </div>
+                    <i class="fas fa-bullseye text-green-400 text-2xl"></i>
+                </div>
+            </div>
+            
+            <div class="simulation-card p-6 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-300 text-sm">Training Level</p>
+                        <p id="trainingLevel" class="text-2xl font-bold text-purple-400">Beginner</p>
+                    </div>
+                    <i class="fas fa-graduation-cap text-purple-400 text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Simulation Interface -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Email List -->
+            <div class="simulation-card p-6 rounded-lg">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-inbox mr-2 text-blue-400"></i>
+                    Inbox Simulation
+                </h2>
+                
+                <div id="emailList" class="space-y-4 max-h-96 overflow-y-auto">
+                    <!-- Emails will be dynamically added here -->
+                </div>
+                
+                <button onclick="generateNewEmail()" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 p-3 rounded transition">
+                    <i class="fas fa-plus mr-2"></i>Generate New Email
+                </button>
+            </div>
+
+            <!-- Email Detail View -->
+            <div class="simulation-card p-6 rounded-lg">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <i class="fas fa-envelope-open mr-2 text-green-400"></i>
+                    Email Analysis
+                </h2>
+                
+                <div id="emailDetail" class="text-gray-400 text-center py-8">
+                    <i class="fas fa-mouse-pointer text-4xl mb-4"></i>
+                    <p>Click on an email to analyze it</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phishing Detection Game -->
+        <div class="mt-8 simulation-card p-6 rounded-lg">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-gamepad mr-2 text-yellow-400"></i>
+                Phishing Detection Challenge
+            </h2>
+            
+            <div id="gameArea" class="text-center">
+                <div class="bg-gray-800 p-6 rounded-lg mb-4">
+                    <h3 class="text-lg font-bold mb-2">Challenge Mode</h3>
+                    <p class="text-gray-300 mb-4">Test your skills by identifying phishing attempts in real-time scenarios</p>
+                    <button onclick="startChallenge()" class="bg-yellow-600 hover:bg-yellow-700 px-6 py-3 rounded transition">
+                        <i class="fas fa-play mr-2"></i>Start Challenge
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Educational Resources -->
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="simulation-card p-6 rounded-lg">
+                <h3 class="font-bold mb-3 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2 text-red-400"></i>
+                    Red Flags
+                </h3>
+                <ul class="text-sm space-y-2 text-gray-300">
+                    <li>• Urgent language and time pressure</li>
+                    <li>• Suspicious sender addresses</li>
+                    <li>• Unexpected attachments</li>
+                    <li>• Generic greetings</li>
+                    <li>• Spelling and grammar errors</li>
+                </ul>
+            </div>
+            
+            <div class="simulation-card p-6 rounded-lg">
+                <h3 class="font-bold mb-3 flex items-center">
+                    <i class="fas fa-shield-alt mr-2 text-green-400"></i>
+                    Best Practices
+                </h3>
+                <ul class="text-sm space-y-2 text-gray-300">
+                    <li>• Verify sender identity</li>
+                    <li>• Check URLs before clicking</li>
+                    <li>• Use two-factor authentication</li>
+                    <li>• Keep software updated</li>
+                    <li>• Report suspicious emails</li>
+                </ul>
+            </div>
+            
+            <div class="simulation-card p-6 rounded-lg">
+                <h3 class="font-bold mb-3 flex items-center">
+                    <i class="fas fa-lightbulb mr-2 text-yellow-400"></i>
+                    Quick Tips
+                </h3>
+                <ul class="text-sm space-y-2 text-gray-300">
+                    <li>• Hover over links to preview</li>
+                    <li>• Look for HTTPS in URLs</li>
+                    <li>• Trust your instincts</li>
+                    <li>• When in doubt, don't click</li>
+                    <li>• Contact IT if unsure</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Detailed Analysis -->
+    <div id="analysisModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-gray-800 p-8 rounded-lg max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Email Analysis Results</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="analysisContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let userStats = {
+            totalEmails: 0,
+            threatsDetected: 0,
+            correctIdentifications: 0,
+            score: 0
+        };
+
+        let emailDatabase = [
+            {
+                id: 1,
+                sender: "security@paypaI.com",
+                subject: "URGENT: Verify Your Account Now!",
+                preview: "Your account will be suspended in 24 hours...",
+                isPhishing: true,
+                indicators: ["Suspicious sender domain (PaypaI vs PayPal)", "Urgent language", "Threat of account suspension"],
+                content: "Dear Customer,\n\nYour PayPal account has been flagged for suspicious activity. Click here immediately to verify: http://paypal-security.fake.com\n\nYour account will be suspended in 24 hours if you don't act now!\n\nPayPal Security Team",
+                timestamp: "2 hours ago"
+            },
+            {
+                id: 2,
+                sender: "notifications@github.com",
+                subject: "New security alert for your account",
+                preview: "We detected a new sign-in to your account...",
+                isPhishing: false,
+                indicators: ["Legitimate sender", "Proper formatting", "Valid security notification"],
+                content: "Hi there,\n\nWe detected a new sign-in to your GitHub account from a new device.\n\nDevice: Chrome on Windows\nLocation: New York, NY\nTime: Today at 2:30 PM\n\nIf this was you, you can ignore this email. If not, please secure your account immediately.\n\nGitHub Security",
+                timestamp: "1 hour ago"
+            },
+            {
+                id: 3,
+                sender: "noreply@amazon-security.net",
+                subject: "Unusual Activity Detected",
+                preview: "We've noticed unusual activity on your account...",
+                isPhishing: true,
+                indicators: ["Suspicious domain (.net instead of .com)", "Generic greeting", "Fake urgency"],
+                content: "Dear Valued Customer,\n\nWe have detected unusual activity on your Amazon account. Please verify your information immediately by clicking the link below:\n\nhttp://amazon-verify.suspicious.net/login\n\nFailure to verify within 48 hours will result in account termination.\n\nAmazon Security Department",
+                timestamp: "30 minutes ago"
+            },
+            {
+                id: 4,
+                sender: "team@slack.com",
+                subject: "Your workspace invitation",
+                preview: "You've been invited to join TechCorp workspace...",
+                isPhishing: false,
+                indicators: ["Legitimate sender", "Expected invitation", "Proper branding"],
+                content: "Hi,\n\nYou've been invited to join the TechCorp workspace on Slack.\n\nClick here to accept your invitation and get started: https://slack.com/invite/techcorp\n\nIf you have any questions, feel free to reach out to your team administrator.\n\nBest regards,\nThe Slack Team",
+                timestamp: "3 hours ago"
+            },
+            {
+                id: 5,
+                sender: "support@microsof-teams.com",
+                subject: "Action Required: Update Your Password",
+                preview: "Your Microsoft Teams password expires today...",
+                isPhishing: true,
+                indicators: ["Typo in domain (microsof vs microsoft)", "Password expiration scam", "Suspicious link"],
+                content: "Microsoft Teams Security Alert\n\nYour password expires today! Update it now to avoid losing access.\n\nClick here to update: http://teams-update.fake-site.com\n\nThis is an automated message from Microsoft Security.\n\nMicrosoft Teams Support",
+                timestamp: "45 minutes ago"
+            }
+        ];
+
+        // Initialize the application
+        function initApp() {
+            updateStats();
+            generateEmailList();
+        }
+
+        // Generate email list in the inbox
+        function generateEmailList() {
+            const emailList = document.getElementById('emailList');
+            emailList.innerHTML = '';
+
+            emailDatabase.forEach(email => {
+                const emailItem = document.createElement('div');
+                emailItem.className = `email-preview p-4 bg-gray-800 rounded-lg cursor-pointer border-l-4 ${email.isPhishing ? 'border-red-500' : 'border-green-500'} hover:bg-gray-700 transition`;
+                
+                emailItem.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-semibold text-sm ${email.isPhishing ? 'text-red-400' : 'text-green-400'}">${email.sender}</span>
+                        <span class="text-xs text-gray-400">${email.timestamp}</span>
+                    </div>
+                    <h4 class="font-bold text-white mb-1">${email.subject}</h4>
+                    <p class="text-gray-300 text-sm truncate">${email.preview}</p>
+                    <div class="mt-2 flex items-center justify-between">
+                        <span class="text-xs px-2 py-1 rounded ${email.isPhishing ? 'bg-red-900 text-red-200' : 'bg-green-900 text-green-200'}">
+                            ${email.isPhishing ? 'Potential Threat' : 'Safe'}
+                        </span>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </div>
+                `;
+
+                emailItem.onclick = () => analyzeEmail(email);
+                emailList.appendChild(emailItem);
+            });
+        }
+
+        // Analyze selected email
+        function analyzeEmail(email) {
+            const emailDetail = document.getElementById('emailDetail');
+            
+            emailDetail.innerHTML = `
+                <div class="text-left">
+                    <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg">${email.subject}</h3>
+                            <span class="px-3 py-1 rounded-full text-sm ${email.isPhishing ? 'bg-red-900 text-red-200' : 'bg-green-900 text-green-200'}">
+                                ${email.isPhishing ? 'PHISHING DETECTED' : 'LEGITIMATE EMAIL'}
+                            </span>
+                        </div>
+                        <p class="text-gray-300 text-sm mb-2"><strong>From:</strong> ${email.sender}</p>
+                        <p class="text-gray-300 text-sm mb-4"><strong>Time:</strong> ${email.timestamp}</p>
+                        <div class="bg-gray-900 p-3 rounded border-l-4 ${email.isPhishing ? 'border-red-500' : 'border-green-500'}">
+                            <pre class="text-sm text-gray-300 whitespace-pre-wrap">${email.content}</pre>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <h4 class="font-bold flex items-center">
+                            <i class="fas fa-search mr-2 text-blue-400"></i>
+                            Analysis Indicators:
+                        </h4>
+                        ${email.indicators.map(indicator => `
+                            <div class="flex items-center p-2 bg-gray-800 rounded">
+                                <i class="fas fa-${email.isPhishing ? 'exclamation-triangle text-red-400' : 'check-circle text-green-400'} mr-2"></i>
+                                <span class="text-sm">${indicator}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="mt-6 grid grid-cols-2 gap-4">
+                        <button onclick="markAsPhishing(${email.id}, ${email.isPhishing})" class="bg-red-600 hover:bg-red-700 p-3 rounded transition">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Mark as Phishing
+                        </button>
+                        <button onclick="markAsLegitimate(${email.id}, ${email.isPhishing})" class="bg-green-600 hover:bg-green-700 p-3 rounded transition">
+                            <i class="fas fa-check-circle mr-2"></i>Mark as Legitimate
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            userStats.totalEmails++;
+            updateStats();
+        }
+
+        // Mark email as phishing
+        function markAsPhishing(emailId, actuallyPhishing) {
+            if (actuallyPhishing) {
+                userStats.correctIdentifications++;
+                userStats.threatsDetected++;
+                userStats.score += 10;
+                showFeedback("Correct! This was indeed a phishing email.", "success");
+            } else {
+                userStats.score -= 5;
+                showFeedback("Incorrect. This was a legitimate email.", "error");
+            }
+            updateStats();
+        }
+
+        // Mark email as legitimate
+        function markAsLegitimate(emailId, actuallyPhishing) {
+            if (!actuallyPhishing) {
+                userStats.correctIdentifications++;
+                userStats.score += 10;
+                showFeedback("Correct! This was a legitimate email.", "success");
+            } else {
+                userStats.score -= 5;
+                userStats.threatsDetected++;
+                showFeedback("Incorrect. This was a phishing email! Be more careful.", "error");
+            }
+            updateStats();
+        }
+
+        // Show feedback to user
+        function showFeedback(message, type) {
+            const feedback = document.createElement('div');
+            feedback.className = `fixed top-4 right-4 p-4 rounded-lg z-50 ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`;
+            feedback.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check' : 'times'} mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(feedback);
+            
+            setTimeout(() => {
+                feedback.remove();
+            }, 3000);
+        }
+
+        // Update statistics display
+        function updateStats() {
+            document.getElementById('totalEmails').textContent = userStats.totalEmails;
+            document.getElementById('threatsDetected').textContent = userStats.threatsDetected;
+            document.getElementById('userScore').textContent = `Score: ${userStats.score}`;
+            
+            const accuracy = userStats.totalEmails > 0 ? Math.round((userStats.correctIdentifications / userStats.totalEmails) * 100) : 0;
+            document.getElementById('accuracyRate').textContent = `${accuracy}%`;
+            
+            // Update training level based on score
+            let level = "Beginner";
+            if (userStats.score >= 100) level = "Expert";
+            else if (userStats.score >= 50) level = "Advanced";
+            else if (userStats.score >= 20) level = "Intermediate";
+            
+            document.getElementById('trainingLevel').textContent = level;
+        }
+
+        // Generate new random email
+        function generateNewEmail() {
+            const templates = [
+                {
+                    sender: "winner@lottery-mega.fake",
+                    subject: "CONGRATULATIONS! You've Won $1,000,000!",
+                    preview: "Click here to claim your prize...",
+                    isPhishing: true,
+                    indicators: ["Too good to be true", "Suspicious domain", "Lottery scam"],
+                    content: "CONGRATULATIONS!\n\nYou have won $1,000,000 in our international lottery! To claim your prize, send us your bank details immediately.\n\nContact: winner@lottery-mega.fake\n\nDon't delay, this offer expires soon!",
+                    timestamp: "just now"
+                },
+                {
+                    sender: "admin@company-portal.net",
+                    subject: "System Maintenance Notification",
+                    preview: "Scheduled maintenance this weekend...",
+                    isPhishing: false,
+                    indicators: ["Standard maintenance notice", "Professional tone", "No urgent action required"],
+                    content: "Dear Team,\n\nWe will be performing scheduled system maintenance this weekend from 2 AM to 6 AM.\n\nDuring this time, some services may be temporarily unavailable.\n\nThank you for your patience.\n\nIT Department",
+                    timestamp: "just now"
+                }
+            ];
+            
+            const newEmail = templates[Math.floor(Math.random() * templates.length)];
+            newEmail.id = Date.now();
+            emailDatabase.unshift(newEmail);
+            generateEmailList();
+        }
+
+        // Start phishing detection challenge
+        function startChallenge() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-lg font-bold mb-4">Challenge: Rapid Fire Detection</h3>
+                    <div id="challengeEmail" class="bg-gray-900 p-4 rounded mb-4">
+                        <p>Loading challenge...</p>
+                    </div>
+                    <div id="challengeButtons" class="grid grid-cols-2 gap-4">
+                        <button onclick="challengeAnswer(true)" class="bg-red-600 hover:bg-red-700 p-3 rounded transition">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Phishing
+                        </button>
+                        <button onclick="challengeAnswer(false)" class="bg-green-600 hover:bg-green-700 p-3 rounded transition">
+                            <i class="fas fa-check-circle mr-2"></i>Legitimate
+                        </button>
+                    </div>
+                    <div id="challengeScore" class="mt-4 text-center">
+                        <p>Challenge Score: <span id="challengePoints">0</span> / 10</p>
+                    </div>
+                </div>
+            `;
+            
+            startNewChallenge();
+        }
+
+        let currentChallengeEmail = null;
+        let challengeScore = 0;
+        let challengeCount = 0;
+
+        function startNewChallenge() {
+            if (challengeCount >= 10) {
+                endChallenge();
+                return;
+            }
+            
+            currentChallengeEmail = emailDatabase[Math.floor(Math.random() * emailDatabase.length)];
+            document.getElementById('challengeEmail').innerHTML = `
+                <h4 class="font-bold mb-2">${currentChallengeEmail.subject}</h4>
+                <p class="text-sm text-gray-400 mb-2">From: ${currentChallengeEmail.sender}</p>
+                <p class="text-sm">${currentChallengeEmail.preview}</p>
+            `;
+        }
+
+        function challengeAnswer(userThinks) {
+            challengeCount++;
+            
+            if (userThinks === currentChallengeEmail.isPhishing) {
+                challengeScore++;
+                showFeedback("Correct!", "success");
+            } else {
+                showFeedback("Incorrect!", "error");
+            }
+            
+            document.getElementById('challengePoints').textContent = challengeScore;
+            
+            setTimeout(() => {
+                startNewChallenge();
+            }, 1000);
+        }
+
+        function endChallenge() {
+            const gameArea = document.getElementById('gameArea');
+            const percentage = (challengeScore / 10) * 100;
+            let grade = "F";
+            if (percentage >= 90) grade = "A+";
+            else if (percentage >= 80) grade = "A";
+            else if (percentage >= 70) grade = "B";
+            else if (percentage >= 60) grade = "C";
+            else if (percentage >= 50) grade = "D";
+            
+            gameArea.innerHTML = `
+                <div class="bg-gray-800 p-6 rounded-lg text-center">
+                    <h3 class="text-2xl font-bold mb-4">Challenge Complete!</h3>
+                    <div class="text-6xl mb-4">${grade}</div>
+                    <p class="text-xl mb-2">Score: ${challengeScore}/10 (${percentage}%)</p>
+                    <p class="text-gray-300 mb-6">${percentage >= 80 ? 'Excellent work!' : percentage >= 60 ? 'Good job, but keep practicing!' : 'More training needed!'}</p>
+                    <button onclick="startChallenge()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded transition">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+            
+            challengeScore = 0;
+            challengeCount = 0;
+        }
+
+        // Reset simulation
+        function resetSimulation() {
+            userStats = {
+                totalEmails: 0,
+                threatsDetected: 0,
+                correctIdentifications: 0,
+                score: 0
+            };
+            
+            updateStats();
+            document.getElementById('emailDetail').innerHTML = `
+                <div class="text-gray-400 text-center py-8">
+                    <i class="fas fa-mouse-pointer text-4xl mb-4"></i>
+                    <p>Click on an email to analyze it</p>
+                </div>
+            `;
+            
+            showFeedback("Simulation reset successfully!", "success");
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('analysisModal').classList.add('hidden');
+        }
+
+        // Initialize app when page loads
+        window.onload = initApp;
+    </script>
+</body>
+</html>
+

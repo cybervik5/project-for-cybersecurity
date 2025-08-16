@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Website | Security Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .security-badge {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .security-badge:hover {
+            transform: scale(1.05);
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #e53935 0%, #fb8c00 50%, #43a047 100%);
+        }
+        .result-card {
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+        .result-card.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .vulnerability-tag {
+            transition: all 0.2s ease;
+        }
+        .vulnerability-tag:hover {
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .test-history {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <h1 class="text-xl font-bold text-gray-800">SecurityPortfolio</h1>
+            </div>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="#" class="text-gray-600 hover:text-indigo-600">Home</a></li>
+                    <li><a href="#" class="text-gray-600 hover:text-indigo-600">Projects</a></li>
+                    <li><a href="#" class="text-indigo-600 font-medium">Assessment</a></li>
+                    <li><a href="#" class="text-gray-600 hover:text-indigo-600">Blog</a></li>
+                    <li><a href="#" class="text-gray-600 hover:text-indigo-600">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Website Vulnerability Assessment</h2>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-500">Last scan: <span id="lastScanDate">Never</span></span>
+                    <span id="scanStatus" class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Inactive</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-700">XSS Vulnerability</h3>
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-skull text-gray-500"></i>
+                        </div>
+                    </div>
+                    <div class="h-2 w-full bg-gray-200 rounded-full mb-2 overflow-hidden">
+                        <div id="xssProgress" class="h-full bg-red-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-sm text-gray-500" id="xssStatus">Not tested</p>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-700">SQL Injection</h3>
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-database text-gray-500"></i>
+                        </div>
+                    </div>
+                    <div class="h-2 w-full bg-gray-200 rounded-full mb-2 overflow-hidden">
+                        <div id="sqlProgress" class="h-full bg-red-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-sm text-gray-500" id="sqlStatus">Not tested</p>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="font-medium text-gray-700">CSRF Protection</h3>
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                            <i class="fas fa-user-shield text-gray-500"></i>
+                        </div>
+                    </div>
+                    <div class="h-2 w-full bg-gray-200 rounded-full mb-2 overflow-hidden">
+                        <div id="csrfProgress" class="h-full bg-red-500" style="width: 0%"></div>
+                    </div>
+                    <p class="text-sm text-gray-500" id="csrfStatus">Not tested</p>
+                </div>
+            </div>
+
+            <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-8">
+                <h3 class="font-medium text-indigo-800 mb-2">Website URL</h3>
+                <div class="flex">
+                    <input type="url" id="targetUrl" placeholder="https://example.com" class="flex-grow px-4 py-2 rounded-l-lg border-r-0 border focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                    <button id="startScan" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-r-lg font-medium transition-colors">
+                        <i class="fas fa-shield-alt mr-2"></i>Run Scan
+                    </button>
+                </div>
+            </div>
+
+            <div id="scanResults" class="hidden">
+                <h3 class="font-bold text-xl text-gray-800 mb-4">Scan Results</h3>
+                <div id="resultsContainer" class="space-y-4">
+                    <!-- Results will be inserted here -->
+                </div>
+
+                <h3 class="font-bold text-xl text-gray-800 mb-4 mt-8">Recommendations</h3>
+                <div id="recommendations" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Recommendations will be inserted here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Test History</h2>
+            <div class="test-history">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vulnerabilities</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="historyTable">
+                        <!-- History items will be inserted here -->
+                    </tbody>
+                </table>
+                <div id="emptyHistory" class="py-12 text-center text-gray-500">
+                    <i class="fas fa-clock fa-3x mb-4"></i>
+                    <p class="text-lg">No test history yet</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Simulated vulnerability tests
+        function testXSS(url) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // 30% chance of XSS vulnerability for demo purposes
+                    const vulnerable = Math.random() < 0.3;
+                    resolve({
+                        vulnerable,
+                        details: vulnerable ? 
+                            'Potential XSS vulnerability detected in form inputs.' : 
+                            'No XSS vulnerabilities detected.',
+                        severity: vulnerable ? 'High' : 'None'
+                    });
+                }, 1500);
+            });
+        }
+
+        function testSQLInjection(url) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // 20% chance of SQL injection vulnerability for demo purposes
+                    const vulnerable = Math.random() < 0.2;
+                    resolve({
+                        vulnerable,
+                        details: vulnerable ? 
+                            'Potential SQL injection vulnerability in login form.' : 
+                            'No SQL injection vulnerabilities detected.',
+                        severity: vulnerable ? 'Critical' : 'None'
+                    });
+                }, 2000);
+            });
+        }
+
+        function testCSRF(url) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // 40% chance of CSRF vulnerability for demo purposes
+                    const vulnerable = Math.random() < 0.4;
+                    resolve({
+                        vulnerable,
+                        details: vulnerable ? 
+                            'Missing CSRF tokens detected in forms.' : 
+                            'Proper CSRF protection detected.',
+                        severity: vulnerable ? 'Medium' : 'None'
+                    });
+                }, 1800);
+            });
+        }
+
+        // UI update functions
+        function updateProgressBar(id, percentage, isVulnerable) {
+            const bar = document.getElementById(id);
+            const status = document.getElementById(id.replace('Progress', 'Status'));
+            
+            let colorClass = 'bg-green-500';
+            if (isVulnerable) {
+                colorClass = percentage > 70 ? 'bg-red-500' : 'bg-yellow-500';
+            }
+            
+            let interval = setInterval(() => {
+                const currentWidth = parseInt(bar.style.width) || 0;
+                if (currentWidth >= percentage) {
+                    clearInterval(interval);
+                } else {
+                    bar.style.width = (currentWidth + 1) + '%';
+                    bar.className = `h-full ${colorClass} transition-all duration-100`;
+                }
+            }, 20);
+            
+            if (isVulnerable) {
+                status.textContent = percentage + '% risk';
+                status.className = 'text-sm font-medium ' + (percentage > 70 ? 'text-red-500' : 'text-yellow-500');
+            } else {
+                status.textContent = 'Secure';
+                status.className = 'text-sm font-medium text-green-500';
+            }
+        }
+
+        function createResultCard(title, description, severity) {
+            const card = document.createElement('div');
+            card.className = 'result-card bg-white p-4 rounded-lg border border-gray-200 shadow-sm';
+            
+            const severityColor = {
+                'Critical': 'bg-red-100 text-red-800',
+                'High': 'bg-orange-100 text-orange-800',
+                'Medium': 'bg-yellow-100 text-yellow-800',
+                'Low': 'bg-blue-100 text-blue-800',
+                'None': 'bg-green-100 text-green-800'
+            };
+            
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-bold text-gray-800">${title}</h4>
+                    <span class="text-xs px-2 py-1 rounded-full ${severityColor[severity]}">${severity}</span>
+                </div>
+                <p class="text-sm text-gray-600">${description}</p>
+            `;
+            
+            setTimeout(() => {
+                card.classList.add('show');
+            }, 100);
+            
+            return card;
+        }
+
+        function createRecommendationCard(title, description, action) {
+            const card = document.createElement('div');
+            card.className = 'recommendation-card bg-white p-4 rounded-lg border border-blue-100 shadow-sm hover:shadow-md transition-shadow';
+            
+            card.innerHTML = `
+                <h4 class="font-bold text-blue-800 mb-2">${title}</h4>
+                <p class="text-sm text-gray-600 mb-3">${description}</p>
+                ${action ? `<button class="text-sm text-blue-600 hover:text-blue-800 font-medium">${action}</button>` : ''}
+            `;
+            
+            return card;
+        }
+
+        function addHistoryItem(date, url, status, vulnerabilities) {
+            const tableBody = document.getElementById('historyTable');
+            const emptyMsg = document.getElementById('emptyHistory');
+            
+            if (emptyMsg) {
+                emptyMsg.remove();
+            }
+            
+            const row = document.createElement('tr');
+            
+            const vulnerabilityBadges = vulnerabilities.map(vuln => {
+                const color = {
+                    'Critical': 'bg-red-100 text-red-800',
+                    'High': 'bg-orange-100 text-orange-800',
+                    'Medium': 'bg-yellow-100 text-yellow-800',
+                    'Low': 'bg-blue-100 text-blue-800'
+                }[vuln.severity];
+                
+                return `<span class="vulnerability-tag text-xs px-2 py-1 rounded-full ${color} mr-1">${vuln.type}</span>`;
+            }).join('');
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${date}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${url}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 text-xs rounded-full ${status === 'Secure' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${status}</span>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900">${vulnerabilityBadges || '<span class="text-gray-400">None</span>'}</td>
+            `;
+            
+            tableBody.prepend(row);
+        }
+
+        // Main scan function
+        document.getElementById('startScan').addEventListener('click', async function() {
+            const url = document.getElementById('targetUrl').value.trim();
+            if (!url) {
+                alert('Please enter a valid URL');
+                return;
+            }
+            
+            // Reset UI
+            document.getElementById('scanStatus').textContent = 'Scanning';
+            document.getElementById('scanStatus').className = 'px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800';
+            document.getElementById('scanResults').classList.add('hidden');
+            document.getElementById('resultsContainer').innerHTML = '';
+            document.getElementById('recommendations').innerHTML = '';
+            
+            // Reset progress bars
+            ['xssProgress', 'sqlProgress', 'csrfProgress'].forEach(id => {
+                document.getElementById(id).style.width = '0%';
+                document.getElementById(id.replace('Progress', 'Status')).textContent = 'Testing...';
+                document.getElementById(id.replace('Progress', 'Status')).className = 'text-sm text-gray-500';
+            });
+            
+            // Run tests
+            try {
+                const [xssResult, sqlResult, csrfResult] = await Promise.all([
+                    testXSS(url),
+                    testSQLInjection(url),
+                    testCSRF(url)
+                ]);
+                
+                // Update progress bars
+                updateProgressBar('xssProgress', xssResult.vulnerable ? 80 : 0, xssResult.vulnerable);
+                updateProgressBar('sqlProgress', sqlResult.vulnerable ? 90 : 0, sqlResult.vulnerable);
+                updateProgressBar('csrfProgress', csrfResult.vulnerable ? 60 : 0, csrfResult.vulnerable);
+                
+                // Show results
+                document.getElementById('scanResults').classList.remove('hidden');
+                
+                // Add result cards
+                const resultsContainer = document.getElementById('resultsContainer');
+                resultsContainer.appendChild(createResultCard(
+                    'Cross-Site Scripting (XSS)',
+                    xssResult.details,
+                    xssResult.severity
+                ));
+                
+                resultsContainer.appendChild(createResultCard(
+                    'SQL Injection',
+                    sqlResult.details,
+                    sqlResult.severity
+                ));
+                
+                resultsContainer.appendChild(createResultCard(
+                    'Cross-Site Request Forgery (CSRF)',
+                    csrfResult.details,
+                    csrfResult.severity
+                ));
+                
+                // Add recommendations
+                const recommendations = document.getElementById('recommendations');
+                
+                if (xssResult.vulnerable) {
+                    recommendations.appendChild(createRecommendationCard(
+                        'XSS Protection',
+                        'Implement proper input sanitization and Content Security Policy (CSP) headers.',
+                        'Learn how to implement CSP'
+                    ));
+                }
+                
+                if (sqlResult.vulnerable) {
+                    recommendations.appendChild(createRecommendationCard(
+                        'SQL Injection Protection',
+                        'Use prepared statements or parameterized queries in all database operations.',
+                        'View best practices'
+                    ));
+                }
+                
+                if (csrfResult.vulnerable) {
+                    recommendations.appendChild(createRecommendationCard(
+                        'CSRF Protection',
+                        'Implement CSRF tokens in all forms and state-changing requests.',
+                        'Implementation guide'
+                    ));
+                }
+                
+                // Add general security recommendations
+                recommendations.appendChild(createRecommendationCard(
+                    'Web Security Checklist',
+                    'Regularly update all software components, enable HTTPS, and implement security headers.',
+                    'Download checklist'
+                ));
+                
+                // Update UI
+                document.getElementById('scanStatus').textContent = 'Completed';
+                document.getElementById('scanStatus').className = 'px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800';
+                document.getElementById('lastScanDate').textContent = new Date().toLocaleString();
+                
+                // Add to history
+                const vulnerabilities = [];
+                if (xssResult.vulnerable) vulnerabilities.push({ type: 'XSS', severity: xssResult.severity });
+                if (sqlResult.vulnerable) vulnerabilities.push({ type: 'SQLi', severity: sqlResult.severity });
+                if (csrfResult.vulnerable) vulnerabilities.push({ type: 'CSRF', severity: csrfResult.severity });
+                
+                addHistoryItem(
+                    new Date().toLocaleString(),
+                    url,
+                    !xssResult.vulnerable && !sqlResult.vulnerable && !csrfResult.vulnerable ? 'Secure' : 'Vulnerable',
+                    vulnerabilities
+                );
+                
+            } catch (error) {
+                console.error('Scan error:', error);
+                document.getElementById('scanStatus').textContent = 'Failed';
+                document.getElementById('scanStatus').className = 'px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800';
+            }
+        });
+    </script>
+</body>
+</html>
+

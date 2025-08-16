@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethical WiFi Security Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .signal-strength::before {
+            content: "■■■■■";
+            letter-spacing: 2px;
+            color: #22c55e;
+        }
+        .network-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .network-card.honeypot {
+            border-left: 4px solid #ef4444;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <header class="mb-8 flex items-center gap-4">
+            <img src="https://placehold.co/60x60" alt="Shield icon with red alert triangle representing security warning" class="rounded-lg">
+            <div>
+                <h1 class="text-3xl font-bold">Ethical WiFi Security Demo</h1>
+                <p class="text-gray-600">Educational simulation only - no real networks are accessed</p>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                <span class="text-2xl">📶</span>
+                Available Networks (Simulation)
+            </h2>
+            
+            <div class="space-y-3" id="networkList">
+                <!-- Networks will be injected here by JavaScript -->
+            </div>
+            
+            <div class="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                <h3 class="font-semibold text-yellow-800">⚠️ Security Notice</h3>
+                <p class="text-yellow-700 mt-1">This demo shows how attackers create fake WiFi networks. Always verify networks before connecting.</p>
+            </div>
+        </div>
+
+        <div id="honeypotPanel" class="hidden bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">
+                <span class="text-red-500">☠️</span>
+                Honeypot Simulation: <span id="fakeSSID" class="font-mono"></span>
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-medium mb-2">Simulated Attack Flow</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">1</div>
+                            <div>
+                                <p class="font-medium">Victim connects to fake network</p>
+                                <p class="text-sm text-gray-600">Network appears identical to legitimate one</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">2</div>
+                            <div>
+                                <p class="font-medium">Traffic interception</p>
+                                <p class="text-sm text-gray-600">All unencrypted traffic is logged</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">3</div>
+                            <div>
+                                <p class="font-medium">Credential harvesting</p>
+                                <p class="text-sm text-gray-600">Login pages are spoofed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-l pl-6">
+                    <h3 class="font-medium mb-3">Defensive Measures</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500">✓</span>
+                            <span>Verify SSID spelling carefully</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500">✓</span>
+                            <span>Use VPN on public WiFi</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500">✓</span>
+                            <span>Enable 2FA on all accounts</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-green-500">✓</span>
+                            <span>Look for HTTPS on login pages</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-6 p-4 bg-red-50 border-l-4 border-red-400 rounded">
+                <h3 class="font-semibold text-red-800">⛔ Legal Notice</h3>
+                <p class="text-red-700 mt-1">Creating real honeypots without authorization is illegal in most jurisdictions. This is strictly an educational simulation.</p>
+            </div>
+            
+            <button id="resetDemo" class="mt-6 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                Reset Simulation
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const networks = [
+                { ssid: "CoffeeShop_WiFi", strength: 4, legit: true },
+                { ssid: "Airport_Free_WiFi", strength: 3, legit: true },
+                { ssid: "Starbucks", strength: 5, legit: false },
+                { ssid: "Library_Public", strength: 2, legit: true },
+                { ssid: "CoffeeShop Free WiFi", strength: 4, legit: false }
+            ];
+            
+            const networkList = document.getElementById('networkList');
+            const honeypotPanel = document.getElementById('honeypotPanel');
+            const fakeSSID = document.getElementById('fakeSSID');
+            const resetBtn = document.getElementById('resetDemo');
+            
+            // Render network list
+            networks.forEach(net => {
+                const card = document.createElement('div');
+                card.className = `network-card p-4 border rounded-lg cursor-pointer transition-all ${!net.legit ? 'honeypot bg-red-50' : 'bg-white'}`;
+                
+                const strengthBars = '■■■■■'.slice(0, net.strength) + '□□□□□'.slice(net.strength);
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-medium flex items-center gap-2">
+                                ${net.ssid}
+                                ${!net.legit ? '<span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Honeypot</span>' : ''}
+                            </h3>
+                            <p class="text-sm text-gray-600 flex items-center gap-1">
+                                <span class="signal-strength" style="color: ${getSignalColor(net.strength)}">${strengthBars}</span>
+                                <span>${net.strength}/5 strength</span>
+                            </p>
+                        </div>
+                        <div class="text-sm ${!net.legit ? 'text-red-600' : 'text-gray-500'}">
+                            ${!net.legit ? 'No password' : 'Secured'}
+                        </div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    if(!net.legit) {
+                        fakeSSID.textContent = net.ssid;
+                        honeypotPanel.classList.remove('hidden');
+                        window.scrollTo({
+                            top: honeypotPanel.offsetTop - 20,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+                
+                networkList.appendChild(card);
+            });
+            
+            resetBtn.addEventListener('click', () => {
+                honeypotPanel.classList.add('hidden');
+            });
+            
+            function getSignalColor(strength) {
+                const colors = ['#ef4444', '#f59e0b', '#f59e0b', '#22c55e', '#22c55e'];
+                return colors[strength - 1] || '#64748b';
+            }
+        });
+    </script>
+</body>
+</html>
