@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi Deauthentication Attack Simulator (Educational Tool)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .network-device {
+            transition: all 0.3s ease;
+        }
+        .device-disconnected {
+            opacity: 0.3;
+        }
+        .deauth-packet {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        @keyframes slowlyBlink {
+            0% { opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { opacity: 0.3; }
+        }
+        .vulnerable {
+            animation: slowlyBlink 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header with disclaimer -->
+        <header class="mb-8 bg-white p-6 rounded-lg shadow-md">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">WiFi Deauthentication Attack Simulator</h1>
+            <p class="text-red-600 font-semibold mb-4">⚠️ IMPORTANT: This is an educational simulation only. Deauthentication attacks without permission are illegal.</p>
+            <div class="prose max-w-none">
+                <p>This tool demonstrates how WiFi deauthentication attacks work by simulating the process. In a real attack:</p>
+                <ul class="list-disc pl-5">
+                    <li>An attacker sends forged deauthentication frames to a client device</li>
+                    <li>The client disconnects from the access point</li>
+                    <li>The victim must reconnect, causing potential disruption</li>
+                </ul>
+                <p class="mt-3">Use this knowledge ethically to improve network security.</p>
+            </div>
+        </header>
+
+        <!-- Simulation controls -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Simulation Controls</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label for="target-select" class="block text-sm font-medium text-gray-700 mb-1">Target Device</label>
+                    <select id="target-select" class="w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="all">All Devices</option>
+                        <option value="laptop">Laptop</option>
+                        <option value="phone">Smartphone</option>
+                        <option value="tablet">Tablet</option>
+                        <option value="iot">Smart Light</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="attack-duration" class="block text-sm font-medium text-gray-700 mb-1">Attack Duration (sec)</label>
+                    <input type="range" id="attack-duration" min="1" max="30" value="5" class="w-full">
+                    <span id="duration-value" class="text-sm text-gray-600">5 seconds</span>
+                </div>
+                <div>
+                    <label for="packet-rate" class="block text-sm font-medium text-gray-700 mb-1">Packet Rate</label>
+                    <input type="range" id="packet-rate" min="1" max="10" value="3" class="w-full">
+                    <span id="rate-value" class="text-sm text-gray-600">3 packets/sec</span>
+                </div>
+            </div>
+            <div class="flex space-x-4">
+                <button id="start-attack" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Start Attack</button>
+                <button id="stop-attack" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700" disabled>Stop Attack</button>
+                <button id="reset-sim" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Reset Simulation</button>
+            </div>
+        </div>
+
+        <!-- Network visualization -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Network Visualization</h2>
+            <div class="relative h-64 bg-gray-200 rounded-lg p-4">
+                <!-- WiFi Router -->
+                <div id="router" class="network-device absolute left-1/2 top-4 transform -translate-x-1/2 w-16 h-16 bg-gray-800 rounded-lg flex items-center justify-center">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/7ad976ca-b5bd-467a-8d31-e57ef2be56fe.png" alt="WiFi router with multiple antennas on a white background, modern design" />
+                    <div class="absolute -bottom-4 text-xs text-center w-full">Router (AP)</div>
+                </div>
+
+                <!-- Client devices -->
+                <div id="laptop" class="network-device absolute left-1/4 top-32 transform -translate-x-1/2 w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center border-2 border-blue-300">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c5037eb9-dce6-4c01-bdb5-56f38152279a.png" alt="Silver laptop computer with screen lit up displaying network icon" />
+                    <div class="absolute -bottom-4 text-xs text-center w-full">Laptop</div>
+                </div>
+
+                <div id="phone" class="network-device absolute left-2/4 top-32 transform -translate-x-1/2 w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center border-2 border-green-300 vulnerable">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/9c3f6b8e-6fdb-49be-b93d-f82366e94560.png" alt="Smartphone with WiFi icon visible on screen" />
+                    <div class="absolute -bottom-4 text-xs text-center w-full">Smartphone</div>
+                </div>
+
+                <div id="tablet" class="network-device absolute left-3/4 top-32 transform -translate-x-1/2 w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center border-2 border-purple-300">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/22f0e1f3-cbb4-44ae-8b32-99593502442c.png" alt="Tablet device showing connection status with WiFi signal bars" />
+                    <div class="absolute -bottom-4 text-xs text-center w-full">Tablet</div>
+                </div>
+
+                <div id="iot" class="network-device absolute left-1/2 bottom-4 transform -translate-x-1/2 w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center border-2 border-yellow-300">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/3fe49800-5259-4475-8fd6-cf14e5ad1525.png" alt="Smart home light bulb with WiFi connectivity symbol" />
+                    <div class="absolute -bottom-4 text-xs text-center w-full">Smart Light</div>
+                </div>
+
+                <!-- Connection lines -->
+                <svg class="absolute inset-0 w-full h-full" style="z-index: 0;">
+                    <line x1="50%" y1="20" x2="25%" y2="32" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5" />
+                    <line x1="50%" y1="20" x2="50%" y2="32" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5" />
+                    <line x1="50%" y1="20" x2="75%" y2="32" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5" />
+                    <line x1="50%" y1="20" x2="50%" y2="60" stroke="#94a3b8" stroke-width="2" stroke-dasharray="5,5" />
+                </svg>
+            </div>
+            
+            <div id="deauth-container"></div>
+        </div>
+
+        <!-- Attack explanation -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">How Deauthentication Attacks Work</h2>
+            <div class="prose max-w-none">
+                <p>Deauthentication attacks exploit the unprotected management frames in the 802.11 WiFi protocol:</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Technical Process:</h3>
+                        <ol class="list-decimal pl-5">
+                            <li>Attacker identifies target devices and their access point</li>
+                            <li>Attacker forges deauthentication frames spoofing the AP</li>
+                            <li>Frames are sent to client devices at high rate</li>
+                            <li>Devices disconnect believing the request came from AP</li>
+                            <li>Devices attempt to reconnect automatically</li>
+                        </ol>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Protection Methods:</h3>
+                        <ul class="list-disc pl-5">
+                            <li>Use WPA3 encryption with Protected Management Frames</li>
+                            <li>Implement 802.11w (management frame protection)</li>
+                            <li>Monitor for suspicious deauthentication frames</li>
+                            <li>Use enterprise authentication (802.1X)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <h3 class="font-semibold text-blue-800">Ethical Considerations</h3>
+                    <p>This simulation is for educational purposes only. Performing deauthentication attacks on networks you don't own or have permission to test is illegal in most jurisdictions. Always obtain written permission before conducting any security testing.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const startBtn = document.getElementById('start-attack');
+        const stopBtn = document.getElementById('stop-attack');
+        const resetBtn = document.getElementById('reset-sim');
+        const targetSelect = document.getElementById('target-select');
+        const durationSlider = document.getElementById('attack-duration');
+        const durationValue = document.getElementById('duration-value');
+        const rateSlider = document.getElementById('packet-rate');
+        const rateValue = document.getElementById('rate-value');
+        const deauthContainer = document.getElementById('deauth-container');
+        
+        // Network devices
+        const router = document.getElementById('router');
+        const laptop = document.getElementById('laptop');
+        const phone = document.getElementById('phone');
+        const tablet = document.getElementById('tablet');
+        const iot = document.getElementById('iot');
+        
+        // Simulation state
+        let attackInterval;
+        let attackRunning = false;
+        let deauthPackets = [];
+        
+        // Update display values for sliders
+        durationSlider.addEventListener('input', () => {
+            durationValue.textContent = `${durationSlider.value} seconds`;
+        });
+        
+        rateSlider.addEventListener('input', () => {
+            rateValue.textContent = `${rateSlider.value} packets/sec`;
+        });
+        
+        // Start attack simulation
+        startBtn.addEventListener('click', () => {
+            if (attackRunning) return;
+            
+            attackRunning = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            resetBtn.disabled = true;
+            
+            const target = targetSelect.value;
+            const duration = parseInt(durationSlider.value) * 1000;
+            const rate = parseInt(rateSlider.value);
+            const delay = 1000 / rate;
+            
+            // Determine target devices
+            const targets = [];
+            if (target === 'all') {
+                targets.push(laptop, phone, tablet, iot);
+            } else {
+                targets.push(document.getElementById(target));
+            }
+            
+            // Send deauth packets at regular intervals
+            attackInterval = setInterval(() => {
+                targets.forEach(device => {
+                    if (device) sendDeauthPacket(device);
+                });
+            }, delay);
+            
+            // Auto-stop after duration
+            setTimeout(() => {
+                stopAttack();
+            }, duration);
+        });
+        
+        // Stop attack simulation
+        function stopAttack() {
+            if (!attackRunning) return;
+            
+            clearInterval(attackInterval);
+            attackRunning = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            resetBtn.disabled = false;
+            
+            // Show disconnected devices
+            const devices = [laptop, phone, tablet, iot];
+            devices.forEach(device => {
+                device.classList.add('device-disconnected');
+            });
+        }
+        
+        stopBtn.addEventListener('click', stopAttack);
+        
+        // Reset simulation
+        resetBtn.addEventListener('click', () => {
+            clearInterval(attackInterval);
+            attackRunning = false;
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            
+            // Clear all deauth packets
+            deauthPackets.forEach(packet => {
+                if (packet.parentNode) deauthContainer.removeChild(packet);
+            });
+            deauthPackets = [];
+            
+            // Reset device states
+            const devices = [laptop, phone, tablet, iot];
+            devices.forEach(device => {
+                device.classList.remove('device-disconnected');
+            });
+        });
+        
+        // Simulate sending a deauth packet
+        function sendDeauthPacket(targetDevice) {
+            // Create a new deauth packet element
+            const packet = document.createElement('div');
+            packet.className = 'deauth-packet';
+            
+            // Position it at the router (source)
+            const routerRect = router.getBoundingClientRect();
+            const targetRect = targetDevice.getBoundingClientRect();
+            
+            const startX = routerRect.left + routerRect.width/2;
+            const startY = routerRect.top + routerRect.height/2;
+            
+            packet.style.left = `${startX}px`;
+            packet.style.top = `${startY}px`;
+            
+            deauthContainer.appendChild(packet);
+            deauthPackets.push(packet);
+            
+            // Animate packet moving to target
+            setTimeout(() => {
+                const endX = targetRect.left + targetRect.width/2;
+                const endY = targetRect.top + targetRect.height/2;
+                
+                packet.style.left = `${endX}px`;
+                packet.style.top = `${endY}px`;
+                packet.style.opacity = '0.9';
+                
+                // Make target device blink (simulate attack effect)
+                targetDevice.style.opacity = '0.5';
+                setTimeout(() => {
+                    targetDevice.style.opacity = '1';
+                }, 200);
+                
+            }, 10);
+            
+            // Remove packet after animation
+            setTimeout(() => {
+                if (packet.parentNode) deauthContainer.removeChild(packet);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
+

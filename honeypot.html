@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .honey-field {
+            position: absolute;
+            left: -9999px;
+        }
+        .log-entry {
+            font-family: monospace;
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        .log-box {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e5e5e5;
+            height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background: #f1f1f1;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .tab-button.active {
+            background: #3b82f6;
+            color: white;
+        }
+        #admin-toggle {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8 relative">
+        <!-- Company branding -->
+        <div class="flex items-center justify-center mb-6">
+            <div class="w-16 h-16 bg-blue-600 flex items-center justify-center rounded-full mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">SecureSys Admin</h1>
+                <p class="text-gray-600 text-sm">Internal Portal</p>
+            </div>
+        </div>
+
+        <!-- Tab navigation -->
+        <div class="flex mb-6">
+            <button class="tab-button active" data-tab="login">Login</button>
+            <button class="tab-button ml-2" data-tab="signup">Sign Up</button>
+        </div>
+
+        <!-- Login form -->
+        <div id="login" class="tab-content active">
+            <!-- Hidden honeypot field -->
+            <input type="text" id="login-honey" name="extra_field" class="honey-field" tabindex="-1" autocomplete="off">
+
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="username" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" autocomplete="username">
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" name="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" autocomplete="current-password">
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="remember" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                    </div>
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-blue-600 hover:text-blue-500">Forgot password?</a>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Sign in</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Signup form -->
+        <div id="signup" class="tab-content">
+            <!-- Hidden honeypot field -->
+            <input type="text" id="signup-honey" name="extra_field_signup" class="honey-field" tabindex="-1" autocomplete="off">
+            <input type="text" id="company" name="company" class="honey-field" tabindex="-1" autocomplete="off">
+
+            <form id="signup-form" class="space-y-4">
+                <div>
+                    <label for="fullname" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" id="fullname" name="fullname" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" autocomplete="name">
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" name="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" autocomplete="email">
+                </div>
+
+                <div>
+                    <label for="new-password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="new-password" name="new-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" autocomplete="new-password">
+                </div>
+
+                <div>
+                    <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <input type="password" id="confirm-password" name="confirm-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" autocomplete="new-password">
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" id="terms" name="terms" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="terms" class="ml-2 block text-sm text-gray-700">I agree to the <a href="#" class="text-blue-600 hover:text-blue-500">terms and conditions</a></label>
+                </div>
+
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Create Account</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Log display (hidden by default and only accessible to you) -->
+        <div id="admin-view" class="hidden">
+            <h3 class="text-lg font-medium text-gray-900 mt-6 mb-4">Honeypot Logs (Admin Only)</h3>
+            <div class="flex mb-4">
+                <button id="show-all" class="text-xs bg-gray-200 px-2 py-1 rounded mr-2">All</button>
+                <button id="show-login" class="text-xs bg-gray-200 px-2 py-1 rounded mr-2">Login Attempts</button>
+                <button id="show-signup" class="text-xs bg-gray-200 px-2 py-1 rounded">Signup Attempts</button>
+            </div>
+            <div class="log-box" id="log-box">
+                <div id="log-container"></div>
+            </div>
+            <div class="flex justify-between mt-4">
+                <button id="clear-logs" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Clear Logs
+                </button>
+                <button id="export-logs" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Export Logs
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin toggle (hidden by default, only shown to authorized IP) -->
+        <button id="admin-toggle" class="hidden mt-6 text-xs text-gray-500 hover:text-gray-700">
+            Admin View
+        </button>
+    </div>
+
+    <script>
+        // Replace this with your actual public IP address
+        const ADMIN_IP = '49.37.158.74';
+        
+        // Initialize logs array
+        let accessLogs = JSON.parse(localStorage.getItem('honeypotLogs')) || [];
+        
+        // DOM elements
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const loginHoney = document.getElementById('login-honey');
+        const signupHoney = document.getElementById('signup-honey');
+        const adminToggle = document.getElementById('admin-toggle');
+        const adminView = document.getElementById('admin-view');
+        const logContainer = document.getElementById('log-container');
+        const clearLogsBtn = document.getElementById('clear-logs');
+        const exportLogsBtn = document.getElementById('export-logs');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const showAllBtn = document.getElementById('show-all');
+        const showLoginBtn = document.getElementById('show-login');
+        const showSignupBtn = document.getElementById('show-signup');
+
+        // Check if current IP is authorized
+        async function checkAdminAccess() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                if (data.ip === ADMIN_IP) {
+                    adminToggle.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Could not verify admin access:", error);
+            }
+        }
+
+        // Run admin access check when page loads
+        window.addEventListener('load', checkAdminAccess);
+
+        // Tab switching
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.getAttribute('data-tab');
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                document.getElementById(tabId).classList.add('active');
+                button.classList.add('active');
+            });
+        });
+
+        // Display logs with optional filtering
+        function displayLogs(filter = 'all') {
+            logContainer.innerHTML = '';
+            accessLogs.forEach(log => {
+                if (filter === 'all' || 
+                    (filter === 'login' && log.type === 'login') || 
+                    (filter === 'signup' && log.type === 'signup')) {
+                    
+                    const logEntry = document.createElement('div');
+                    logEntry.className = 'log-entry';
+                    
+                    const icon = log.type === 'login' ? '🔐' : '📝';
+                    const botTag = log.isBot ? ' [BOT]' : '';
+                    const fields = Object.entries(log.data)
+                        .filter(([key]) => !key.includes('honey') && !key.includes('extra'))
+                        .map(([key, val]) => `${key}: ${val}`)
+                        .join(', ');
+                        
+                    logEntry.textContent = `${icon} [${log.timestamp}] IP: ${log.ip}${botTag} - ${fields}`;
+                    logContainer.appendChild(logEntry);
+                }
+            });
+        }
+
+        // Function to get client IP
+        async function getClientIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                return 'unknown';
+            }
+        }
+
+        // Login form submission handler
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Check if honeypot field was filled
+            const honeypotTriggered = loginHoney.value !== '';
+            
+            // Get form data
+            const formData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                remember: document.getElementById('remember').checked,
+                honeyField: loginHoney.value
+            };
+            
+            // Create log entry
+            await createLogEntry(formData, 'login', honeypotTriggered);
+        });
+
+        // Signup form submission handler
+        signupForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Check if honeypot fields were filled
+            const honeypotTriggered = signupHoney.value !== '' || document.getElementById('company').value !== '';
+            
+            // Get form data
+            const formData = {
+                fullname: document.getElementById('fullname').value,
+                email: document.getElementById('email').value,
+                newPassword: document.getElementById('new-password').value,
+                confirmPassword: document.getElementById('confirm-password').value,
+                terms: document.getElementById('terms').checked,
+                honeyField: signupHoney.value,
+                company: document.getElementById('company').value
+            };
+            
+            // Create log entry
+            await createLogEntry(formData, 'signup', honeypotTriggered);
+        });
+
+        // Common function to create log entries
+        async function createLogEntry(formData, type, isBot) {
+            // Get client IP and timestamp
+            const ip = await getClientIP();
+            const timestamp = new Date().toLocaleString();
+            
+            // Create log entry
+            const logEntry = {
+                timestamp,
+                ip,
+                data: formData,
+                isBot,
+                type,
+                userAgent: navigator.userAgent
+            };
+            
+            // Add to logs and save to localStorage
+            accessLogs.unshift(logEntry);
+            localStorage.setItem('honeypotLogs', JSON.stringify(accessLogs));
+            
+            // Reset form
+            if (type === 'login') {
+                loginForm.reset();
+            } else {
+                signupForm.reset();
+            }
+            
+            // Fake successful response
+            const message = type === 'login' 
+                ? 'Login successful! Redirecting...' 
+                : 'Account created! Please check your email for verification.';
+            alert(message);
+            
+            // Update logs display if admin view is visible
+            if (!adminView.classList.contains('hidden')) {
+                displayLogs();
+            }
+        }
+
+        // Admin toggle functionality
+        adminToggle.addEventListener('click', async function() {
+            const ip = await getClientIP();
+            if (ip === ADMIN_IP) {
+                adminView.classList.toggle('hidden');
+                if (!adminView.classList.contains('hidden')) {
+                    displayLogs();
+                }
+            } else {
+                alert('Access denied: Unauthorized IP address');
+            }
+        });
+
+        // Clear logs functionality
+        clearLogsBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear all logs?')) {
+                accessLogs = [];
+                localStorage.removeItem('honeypotLogs');
+                logContainer.innerHTML = '';
+            }
+        });
+
+        // Export logs functionality
+        exportLogsBtn.addEventListener('click', function() {
+            const dataStr = JSON.stringify(accessLogs, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'honeypot-logs.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        });
+
+        // Log filtering buttons
+        showAllBtn.addEventListener('click', () => displayLogs('all'));
+        showLoginBtn.addEventListener('click', () => displayLogs('login'));
+        showSignupBtn.addEventListener('click', () => displayLogs('signup'));
+    </script>
+</body>
+</html>
